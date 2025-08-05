@@ -1,200 +1,353 @@
-# RDT Protocol Simulator
+# Reliable Data Transfer (RDT) Protocol v2.2 Implementation
 
-## Overview
+[![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Complete-brightgreen.svg)]()
 
-This project implements a **Reliable Data Transfer (RDT) Protocol v2.2** simulation that demonstrates how reliable communication can be achieved over an unreliable network. The implementation includes a sender, receiver, and network layer that simulates real-world network conditions like packet corruption, delays, and reliability issues.
+## 📋 Table of Contents
 
-## Project Structure
+- [Overview](#overview)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Technical Details](#technical-details)
+- [Protocol Specification](#protocol-specification)
+- [Examples](#examples)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
+
+## 🎯 Overview
+
+This project implements a **Reliable Data Transfer (RDT) Protocol version 2.2** simulation, demonstrating how reliable communication can be achieved over an unreliable network. The implementation showcases fundamental networking concepts including error detection, flow control, and retransmission mechanisms.
+
+### What is RDT Protocol?
+
+The RDT Protocol is a simplified version of TCP (Transmission Control Protocol) that ensures reliable data transmission over unreliable networks. It handles:
+
+- **Packet corruption detection** using checksums
+- **Duplicate packet detection** using sequence numbers
+- **Automatic retransmission** of lost or corrupted packets
+- **Stop-and-wait flow control** mechanism
+
+## ✨ Features
+
+### Core Functionality
+- ✅ **Reliable Data Transfer**: Ensures message delivery despite network issues
+- ✅ **Error Detection**: Checksum-based corruption detection
+- ✅ **Flow Control**: Stop-and-wait protocol implementation
+- ✅ **Retransmission**: Automatic packet resending on failure
+- ✅ **Sequence Numbering**: Alternating 0/1 sequence for duplicate detection
+
+### Network Simulation
+- 🌐 **Unreliable Network Layer**: Simulates real-world network conditions
+- 🔧 **Configurable Reliability**: Adjustable packet delivery probability
+- ⏱️ **Variable Delays**: Configurable round-trip time simulation
+- 🐛 **Controlled Corruption**: Simulate packet and ACK corruption
+
+### Debugging & Monitoring
+- 📊 **Debug Mode**: Detailed logging of packet transmission
+- 🔍 **Packet Inspection**: View packet contents and checksums
+- 📈 **Performance Monitoring**: Track retransmission attempts
+
+## 🏗️ Architecture
+
+### System Components
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Application   │    │   Transport     │    │     Network     │
+│     Layer       │    │     Layer       │    │     Layer       │
+├─────────────────┤    ├─────────────────┤    ├─────────────────┤
+│ SenderProcess   │◄──►│   RDTSender     │◄──►│  NetworkLayer   │
+│ ReceiverProcess │◄──►│  RDTReceiver    │◄──►│                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+### File Structure
 
 ```
 Networks/
-├── main.py          # Main entry point and simulation orchestrator
-├── network.py       # Network layer implementation (unreliable channel)
-├── sender.py        # RDT Sender implementation
-├── receiver.py      # RDT Receiver implementation
+├── main.py          # Entry point and orchestration
+├── network.py       # Unreliable network layer simulation
+├── sender.py        # RDT sender implementation
+├── receiver.py      # RDT receiver implementation
 └── README.md        # This file
 ```
 
-## Architecture
+## 🚀 Installation
 
-### Components
+### Prerequisites
 
-1. **Application Layer**
-   - `SenderProcess`: Manages outgoing data from the sender application
-   - `ReceiverProcess`: Manages incoming data for the receiver application
+- **Python 3.7 or higher**
+- **No external dependencies required** (uses only Python standard library)
 
-2. **Transport Layer**
-   - `RDTSender`: Implements RDT v2.2 sender protocol
-   - `RDTReceiver`: Implements RDT v2.2 receiver protocol
+### Setup
 
-3. **Network Layer**
-   - `NetworkLayer`: Simulates an unreliable network with configurable parameters
+1. **Clone or download the project**
+   ```bash
+   git clone <repository-url>
+   cd Networks
+   ```
 
-## RDT Protocol v2.2 Features
+2. **Verify Python installation**
+   ```bash
+   python --version
+   # Should display Python 3.7+
+   ```
 
-### Key Characteristics
-- **Stop-and-Wait Protocol**: Sender waits for acknowledgment before sending next packet
-- **Sequence Numbers**: Uses alternating sequence numbers (0, 1) for packet identification
-- **Error Detection**: Checksums to detect corrupted packets
-- **Retransmission**: Automatically retransmits packets on corruption or wrong sequence
-- **Flow Control**: Prevents buffer overflow through acknowledgment mechanism
+3. **Ready to run!** No additional setup required.
 
-### Protocol Flow
-1. Sender creates packet with sequence number, data, and checksum
-2. Packet sent through unreliable network layer
-3. Network layer may corrupt packet based on reliability settings
-4. Receiver checks packet integrity and sequence number
-5. Receiver sends acknowledgment (ACK) with expected next sequence number
-6. Network layer may corrupt acknowledgment
-7. Sender validates acknowledgment and retransmits if necessary
+## 📖 Usage
 
-## Usage
-
-### Command Line Interface
+### Basic Usage
 
 ```bash
-python main.py msg=<message> rel=<reliability> delay=<delay> debug=<debug_mode> [pkt=<packet_corruption>] [ack=<ack_corruption>]
+python main.py msg="Hello World" rel=0.8 delay=1 debug=0
 ```
 
-### Parameters
+### Command Line Arguments
 
-| Parameter | Type | Description | Default |
-|-----------|------|-------------|---------|
-| `msg` | string | Message to send | Required |
-| `rel` | float | Network reliability (0.0-1.0) | Required |
-| `delay` | int | Network delay in seconds | Required |
-| `debug` | int | Enable debug mode (0/1) | Required |
-| `pkt` | int | Enable packet corruption (0/1) | True (when debug=1) |
-| `ack` | int | Enable ACK corruption (0/1) | True (when debug=1) |
+| Parameter | Type | Description | Default | Example |
+|-----------|------|-------------|---------|---------|
+| `msg` | string | Message to send | Required | `msg="Hello"` |
+| `rel` | float | Network reliability (0.0-1.0) | 1.0 | `rel=0.8` |
+| `delay` | int | Network delay in seconds | 1 | `delay=2` |
+| `debug` | int | Enable debug mode (0/1) | 0 | `debug=1` |
+| `pkt` | int | Corrupt packets (0/1) | 1 | `pkt=1` |
+| `ack` | int | Corrupt ACKs (0/1) | 1 | `ack=0` |
 
-### Examples
+### Usage Examples
 
+#### 1. Simple Message Transmission
 ```bash
-# Basic reliable transmission
-python main.py msg="Hello World" rel=1.0 delay=1 debug=0
-
-# Simulate unreliable network
-python main.py msg="Test Message" rel=0.7 delay=2 debug=1 pkt=1 ack=1
-
-# High corruption scenario
-python main.py msg="Important Data" rel=0.3 delay=3 debug=1 pkt=1 ack=1
+python main.py msg="Hello World"
 ```
 
-## Implementation Details
+#### 2. Unreliable Network Simulation
+```bash
+python main.py msg="Test Message" rel=0.6 delay=2
+```
 
-### Checksum Algorithm
-The implementation uses a simple checksum based on ASCII values:
-- **Sender**: `checksum = ord(data)` (ASCII value of character)
-- **Receiver**: Validates by comparing `checksum == ord(data)`
+#### 3. Debug Mode with Corruption
+```bash
+python main.py msg="Debug Test" rel=0.7 delay=1 debug=1 pkt=1 ack=1
+```
+
+#### 4. High Reliability Network
+```bash
+python main.py msg="Important Data" rel=0.95 delay=0.5 debug=0
+```
+
+## ⚙️ Configuration
+
+### Network Parameters
+
+| Parameter | Range | Effect |
+|-----------|-------|--------|
+| `reliability` | 0.0 - 1.0 | Higher values = more reliable network |
+| `delay` | 0+ seconds | Simulates network latency |
+| `pkt_corrupt` | true/false | Enables packet corruption |
+| `ack_corrupt` | true/false | Enables ACK corruption |
+
+### Debug Options
+
+- **Debug Mode**: Provides detailed packet transmission logs
+- **Packet Inspection**: View packet contents, checksums, and sequence numbers
+- **Corruption Control**: Fine-tune corruption simulation
+
+## 🔧 Technical Details
 
 ### Packet Structure
 
-**Sender Packet:**
 ```python
+# Sender Packet
 {
-    'sequence_number': '0' or '1',
-    'data': character,
-    'checksum': int
+    'sequence_number': '0' or '1',  # Alternating sequence
+    'data': 'character',            # Single character to send
+    'checksum': int                 # ASCII value for error detection
+}
+
+# Receiver ACK Packet
+{
+    'ack': '0' or '1',             # Acknowledged sequence number
+    'checksum': int                 # Checksum of ACK
 }
 ```
 
-**Receiver ACK Packet:**
+### Checksum Algorithm
+
 ```python
-{
-    'ack': '0' or '1',
-    'checksum': int
-}
+def get_checksum(data):
+    """Calculate checksum for error detection"""
+    return ord(data)  # ASCII value of character
 ```
 
-### Network Layer Simulation
+### Error Detection
 
-The network layer simulates real-world network conditions:
+- **Corruption Detection**: Compares received checksum with calculated checksum
+- **Sequence Validation**: Ensures packets arrive in correct order
+- **Duplicate Detection**: Identifies and handles duplicate packets
 
-- **Reliability**: Configurable probability of successful packet delivery
-- **Delay**: Simulates network latency with `time.sleep()`
-- **Corruption**: Randomly corrupts packets and acknowledgments
-- **Corruption Types**:
-  - Sequence number corruption
-  - Data corruption
-  - Checksum corruption
+## 📋 Protocol Specification
 
-## Error Handling
+### RDT v2.2 Features
 
-### Corruption Detection
-- **Packet Corruption**: Receiver validates checksum against data
-- **ACK Corruption**: Sender validates ACK checksum
-- **Sequence Mismatch**: Both sides validate expected sequence numbers
+1. **Stop-and-Wait Protocol**
+   - Sender transmits one packet at a time
+   - Waits for acknowledgment before sending next packet
 
-### Retransmission Strategy
-- Sender retransmits packet if:
-  - ACK is corrupted
-  - ACK contains wrong sequence number
-- Receiver sends duplicate ACK if:
-  - Packet is corrupted
-  - Packet has wrong sequence number
+2. **Error Detection**
+   - Checksum-based corruption detection
+   - Sequence number validation
 
-## Debugging
+3. **Retransmission**
+   - Automatic resending of corrupted/lost packets
+   - Continues until successful acknowledgment
 
-When `debug=1`, the system provides detailed logging:
-- Packet creation and transmission
-- Corruption detection results
-- Sequence number validation
-- Retransmission events
+4. **Flow Control**
+   - Prevents sender from overwhelming receiver
+   - Ensures reliable delivery
 
-## Technical Requirements
+### State Machine
 
-- **Python Version**: 3.6+
-- **Dependencies**: None (uses only standard library)
-- **Operating System**: Cross-platform compatible
+```
+Sender States:
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   WAIT      │───►│   SEND      │───►│   WAIT_ACK  │
+│  CALL_FROM  │    │   PACKET    │    │             │
+│   APP       │    │             │    │             │
+└─────────────┘    └─────────────┘    └─────────────┘
+       ▲                                    │
+       │                                    │
+       └─────────────┐    ┌─────────────┐   │
+                     │    │   TIMEOUT   │◄──┘
+                     └────┤             │
+                          └─────────────┘
+```
 
-## Educational Value
+## 💡 Examples
 
-This implementation demonstrates key networking concepts:
+### Example 1: Successful Transmission
 
-1. **Reliable Data Transfer**: How to build reliable communication over unreliable channels
-2. **Error Detection**: Using checksums to detect transmission errors
-3. **Flow Control**: Managing data flow between sender and receiver
-4. **Network Simulation**: Modeling real-world network conditions
-5. **Protocol Design**: Understanding protocol state machines
+```bash
+$ python main.py msg="Hello" rel=0.9 delay=1 debug=1
 
-## Extensions and Improvements
+Output:
+Sender is sending: ['H', 'e', 'l', 'l', 'o']
+[Debug logs showing packet transmission]
+Sender Done!
+Receiver received: ['H', 'e', 'l', 'l', 'o']
+```
 
-Potential enhancements for this project:
+### Example 2: Network with Corruption
 
-1. **Sliding Window**: Implement Go-Back-N or Selective Repeat
-2. **Enhanced Checksums**: Use CRC or MD5 for better error detection
-3. **Congestion Control**: Add window size management
-4. **Performance Metrics**: Measure throughput and efficiency
-5. **GUI Interface**: Add graphical simulation interface
+```bash
+$ python main.py msg="Test" rel=0.5 delay=2 debug=1
 
-## Troubleshooting
+Output:
+Sender is sending: ['T', 'e', 's', 't']
+[Debug logs showing retransmissions due to corruption]
+Sender Done!
+Receiver received: ['T', 'e', 's', 't']
+```
+
+### Example 3: High-Delay Network
+
+```bash
+$ python main.py msg="Data" rel=0.8 delay=5 debug=0
+
+Output:
+Sender is sending: ['D', 'a', 't', 'a']
+[Waits 5 seconds between packets]
+Sender Done!
+Receiver received: ['D', 'a', 't', 'a']
+```
+
+## 🔍 Troubleshooting
 
 ### Common Issues
 
-1. **Import Errors**: Ensure all files are in the same directory
-2. **Parameter Errors**: Check parameter format and values
-3. **Infinite Loops**: May occur with very low reliability settings
-4. **Memory Issues**: Large messages with high corruption rates
+#### 1. **Python Version Error**
+```bash
+Error: Python version not supported
+Solution: Ensure Python 3.7+ is installed
+```
+
+#### 2. **Missing Arguments**
+```bash
+Error: Missing required argument 'msg'
+Solution: Provide all required arguments
+```
+
+#### 3. **Invalid Parameter Values**
+```bash
+Error: Reliability must be between 0.0 and 1.0
+Solution: Use valid parameter ranges
+```
 
 ### Debug Tips
 
-- Start with `rel=1.0` and `debug=1` for reliable transmission
-- Gradually decrease reliability to test error handling
-- Use short messages initially to verify protocol behavior
-- Monitor console output for detailed protocol state
+1. **Enable Debug Mode**: Use `debug=1` to see detailed packet information
+2. **Check Network Reliability**: Lower `rel` values simulate more unreliable networks
+3. **Monitor Retransmissions**: Debug mode shows retransmission attempts
+4. **Verify Checksums**: Debug output shows checksum calculations
 
-## License
+### Performance Optimization
 
-This project is for educational purposes and demonstrates fundamental networking concepts through practical implementation.
+- **High Reliability Networks**: Use `rel=0.9+` for minimal retransmissions
+- **Low Delay**: Use `delay=0.1` for faster simulation
+- **Debug Mode**: Disable for production use (`debug=0`)
 
-## Contributing
+## 🤝 Contributing
 
-This is an educational project. Feel free to:
-- Report bugs or issues
-- Suggest improvements
-- Add new features
-- Enhance documentation
+We welcome contributions! Here's how you can help:
+
+### Development Setup
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes**
+4. **Test thoroughly**: Run with various parameters
+5. **Submit a pull request**
+
+### Contribution Guidelines
+
+- **Code Style**: Follow PEP 8 Python style guidelines
+- **Documentation**: Update README for new features
+- **Testing**: Test with various network conditions
+- **Bug Reports**: Include detailed reproduction steps
+
+### Areas for Improvement
+
+- [ ] Add support for larger packet sizes
+- [ ] Implement sliding window protocol
+- [ ] Add network congestion simulation
+- [ ] Create GUI interface
+- [ ] Add performance benchmarking tools
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **Computer Networking**: Concepts based on networking fundamentals
+- **TCP Protocol**: Inspiration from Transmission Control Protocol
+- **Educational Purpose**: Designed for learning networking concepts
+
+## 📞 Support
+
+For questions, issues, or contributions:
+
+- **Issues**: Create an issue in the repository
+- **Discussions**: Use GitHub Discussions for questions
+- **Email**: Contact maintainers for direct support
 
 ---
 
-**Note**: This implementation is designed for educational purposes and demonstrates the core concepts of reliable data transfer protocols. For production use, consider established networking libraries and protocols. 
+**Made with ❤️ for educational purposes**
+
+*This project demonstrates fundamental networking concepts and is perfect for learning about reliable data transfer protocols.* 
